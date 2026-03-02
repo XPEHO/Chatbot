@@ -1,2 +1,8 @@
 .env
 exports/*
+!exports/.gitkeep
+vector-store/*
+!vector-store/.gitkeep
+.venv/
+__pycache__/
+.ipynb_checkpoints/
