@@ -1,1 +1,9 @@
 python-dotenv>=1.0.0
+langchain-openai
+langchain_chroma
+langchain-text-splitters
+langchain-community
+langgraph
+pathlib
+tqdm
+pypdf
