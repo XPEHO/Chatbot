@@ -1,0 +1,42 @@
+services:
+  chatbot-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: chatbot-api-local
+    env_file:
+      - .env
+    environment:
+      - VECTOR_STORE_DIR=/app/vector-store
+      - COLLECTION_NAME=collection_test
+      - TOP_K=4
+      - BACKEND_MODEL_ID=chatbot-rag
+    volumes:
+      - ./vector-store:/app/vector-store
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: anythingllm-local
+    depends_on:
+      - chatbot-api
+    cap_add:
+      - SYS_ADMIN
+    env_file:
+      - .env
+    environment:
+      - STORAGE_DIR=/app/server/storage
+      - GENERIC_OPEN_AI_BASE_PATH=http://chatbot-api:8000/v1
+      - OPEN_AI_BASE_PATH=http://chatbot-api:8000/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - anythingllm-local-storage:/app/server/storage
+    ports:
+      - "127.0.0.1:3001:3001"
+    restart: unless-stopped
+
+volumes:
+  anythingllm-local-storage:
