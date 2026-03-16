@@ -87,6 +87,12 @@ Security notes:
 - Disable public signup inside AnythingLLM unless explicitly needed.
 - Keep `OPENAI_API_KEY` only inside server env, never in frontend code.
 
+## 5) Automatize the vector store reload : 
+Create a job to automatically update the vectore store weekly : 
+CRON_TZ=Europe/Paris
+0 7 * * 1 chatbot/reload_job.sh >> chatbot/reindex.log 2>&1
+
+
 ## Optional: notebooks
 
 ```bash

@@ -30,6 +30,8 @@ services:
       - STORAGE_DIR=/app/server/storage
       - GENERIC_OPEN_AI_BASE_PATH=http://chatbot-api:8000/v1
       - OPEN_AI_BASE_PATH=http://chatbot-api:8000/v1
+      - AUTH_TOKEN=${ANYLLM_ADMIN_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
