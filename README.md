@@ -25,6 +25,12 @@ MODEL_EMBEDDING=your_embedding_model
 BOOKSTACK_URL=your_url
 BOOKSTACK_TOKEN_ID=your_bookstack_token_id
 BOOKSTACK_TOKEN_SECRET=your_bookstack_token_secret
+
+CHATBOT_API_BIND_IP=IP
+CHATBOT_API_HOST_PORT=PORT
+CHATBOT_API_INTERNAL_PORT=PORT
+ANYTHINGLLM_BIND_IP=IP
+ANYTHINGLLM_HOST_PORT=PORT
 ```
 
 ## Python setup
@@ -58,8 +64,8 @@ docker compose up --build
 ```
 
 Access:
-- Open WebUI: `http://localhost:3000`
-- Chatbot API health: `http://localhost:8000/health`
+- AnythingLLM: `http://localhost:${ANYTHINGLLM_HOST_PORT}` (default: `3001`)
+- Chatbot API health: `http://localhost:${CHATBOT_API_HOST_PORT}/health` (default: `8000`)
 
 Open WebUI is configured to call the local chatbot backend through OpenAI-compatible routes:
 - `GET /v1/models`
