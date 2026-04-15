@@ -18,7 +18,7 @@ from langchain_community.callbacks.manager import get_openai_callback
 # Configuration & Environment
 load_dotenv()
 # LLM_MODEL = os.getenv("MODEL_LLM")
-EMB_MODEL = os.getenv("MODEL_EMBEDDING", "text-embedding-3-small")
+EMB_MODEL = os.getenv("MODEL_EMBEDDING")
 DOCS_DIR = 'exports'
 PERSIST_DIR = 'vector-store'
 

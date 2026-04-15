@@ -19,8 +19,8 @@ from langchain_core.documents import Document
 from langgraph.graph import START, StateGraph
 
 load_dotenv()
-LLM_MODEL = os.getenv("MODEL_LLM", "gpt-4o")
-EMB_MODEL = os.getenv("MODEL_EMBEDDING", "text-embedding-3-small")
+LLM_MODEL = os.getenv("MODEL_LLM")
+EMB_MODEL = os.getenv("MODEL_EMBEDDING")
 DOCS_DIR = 'exports'
 PERSIST_DIR = 'vector-store'
 
