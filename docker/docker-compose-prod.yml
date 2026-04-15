@@ -1,0 +1,40 @@
+services:
+  chatbot-api:
+    image: ghcr.io/xpeho/chatbot-api:latest
+    pull_policy: always
+    env_file:
+      - .env
+    environment:
+      - VECTOR_STORE_DIR=/app/vector-store
+      - COLLECTION_NAME=collection_test
+      - TOP_K=4
+      - BACKEND_MODEL_ID=chatbot-rag
+    volumes:
+      - ./vector-store:/app/vector-store
+    ports:
+      - "${CHATBOT_API_BIND_IP}:${CHATBOT_API_HOST_PORT}:${CHATBOT_API_INTERNAL_PORT}"
+    restart: unless-stopped
+
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: anythingllm-local
+    depends_on:
+      - chatbot-api
+    cap_add:
+      - SYS_ADMIN
+    env_file:
+      - .env
+    environment:
+      - STORAGE_DIR=/app/server/storage
+      - GENERIC_OPEN_AI_BASE_PATH=http://chatbot-api:${CHATBOT_API_INTERNAL_PORT}/v1
+      - OPEN_AI_BASE_PATH=http://chatbot-api:${CHATBOT_API_INTERNAL_PORT}/v1
+      - AUTH_TOKEN=${ANYLLM_ADMIN_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - anythingllm-local-storage:/app/server/storage
+    ports:
+      - "${ANYTHINGLLM_BIND_IP}:${ANYTHINGLLM_HOST_PORT}:${ANYTHINGLLM_HOST_PORT}"
+    restart: unless-stopped
+
+volumes:
+  anythingllm-local-storage:
