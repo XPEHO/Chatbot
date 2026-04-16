@@ -16,8 +16,6 @@ cd "$PROJECT_DIR"
 
 echo "[reindex] starting export + vector store reload"
 docker compose -f "$COMPOSE_FILE" run --rm --no-deps --build \
-  -v "$PROJECT_DIR:/work" \
-  -w /work \
   chatbot-api \
   sh -lc "python export_pages.py && python vector_store.py"
 echo "[reindex] done"
