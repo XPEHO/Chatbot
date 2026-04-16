@@ -9,7 +9,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.rag import RAGCore
+
 BACKEND_MODEL_ID = os.getenv("BACKEND_MODEL_ID", "chatbot-rag")
+engine = RAGCore()
 
 
 class ChatMessage(BaseModel):
@@ -47,7 +50,8 @@ def chat_completions(request: ChatCompletionRequest):
     if not request.messages:
         raise HTTPException(status_code=400, detail="messages is required")
 
-    answer = f"Reponse bidon API."
+    user_msg = request.messages[-1].content
+    answer = engine.query(user_msg)
     created = int(time.time())
     completion_id = f"chatcmpl-{uuid.uuid4().hex[:24]}"
     model_id = request.model or BACKEND_MODEL_ID
