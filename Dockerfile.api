@@ -9,6 +9,8 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY app /app/app
+COPY vector_store.py /app/vector_store.py
+COPY export_pages.py /app/export_pages.py
 RUN mkdir -p /app/vector-store
 
 EXPOSE 8000
