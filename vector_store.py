@@ -1,19 +1,12 @@
+
+from dotenv import load_dotenv
 import os
 from pathlib import Path
-from typing import List
-from typing_extensions import TypedDict
-from dotenv import load_dotenv
-from tqdm import tqdm
-
 # LangChain & LangGraph Imports
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
+from langchain_community.document_loaders import PyMuPDFLoader, Docx2txtLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.documents import Document
-from langgraph.graph import START, StateGraph
-from langchain_community.callbacks.manager import get_openai_callback
 
 # Configuration & Environment
 load_dotenv()
@@ -23,19 +16,6 @@ DOCS_DIR = 'exports'
 PERSIST_DIR = 'vector-store'
 
 
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
-from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
-from langchain_community.document_loaders import PyMuPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-load_dotenv()
-EMB_MODEL = os.getenv("MODEL_EMBEDDING", "text-embedding-3-small")
-DOCS_DIR = 'exports'
-PERSIST_DIR = 'vector-store'
 
 def ingest():
     if not os.path.exists(DOCS_DIR):

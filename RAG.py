@@ -113,7 +113,7 @@ def run_ingestion():
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
         splits = splitter.split_documents(new_docs)
         engine.vector_store.add_documents(splits)
-        print(f"✅ Successfully indexed {len(splits)} chunks.")
+        print(f"Successfully indexed {len(splits)} chunks.")
 
 if __name__ == "__main__":
     import uvicorn
