@@ -7,6 +7,7 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import START, StateGraph
 
 load_dotenv()
@@ -19,6 +20,7 @@ TOP_K = int(os.getenv("TOP_K", "4"))
 
 class State(TypedDict):
     question: str
+    history: List[dict]
     context: List[Document]
     answer: str
 
@@ -54,9 +56,13 @@ class RAGCore:
         def generate(state: State):
             docs_content = "\n\n".join(doc.page_content for doc in state["context"])
             sources = list(set([os.path.basename(doc.metadata.get("source", "Unknown")) for doc in state["context"]]))
-            messages = prompt.invoke({"question": state["question"], "context": docs_content})
-            response = self.llm.invoke(messages)
-            source_text = "\n\n**Sources:**\n- " + "\n- ".join(sources)
+            system = prompt.invoke({"question": state["question"], "context": docs_content})
+            history = [
+                HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"])
+                for m in state.get("history", [])
+            ]
+            response = self.llm.invoke(history + system.to_messages())
+            source_text = "\n\n**Sources:**\n- " + "\n- ".join(sources) if sources else ""
             return {"answer": response.content + source_text}
 
         workflow = StateGraph(State)
@@ -66,6 +72,6 @@ class RAGCore:
         workflow.add_edge("retrieve", "generate")
         return workflow.compile()
 
-    def query(self, text: str) -> str:
-        result = self.graph.invoke({"question": text})
+    def query(self, text: str, history: List[dict] = []) -> str:
+        result = self.graph.invoke({"question": text, "history": history})
         return result["answer"]
