@@ -14,6 +14,7 @@ LLM_MODEL = os.getenv("MODEL_LLM")
 EMB_MODEL = os.getenv("MODEL_EMBEDDING")
 PERSIST_DIR = os.getenv("VECTOR_STORE_DIR", "vector-store")
 COLLECTION_NAME = os.getenv("COLLECTION_NAME", "collection_test")
+TOP_K = int(os.getenv("TOP_K", "4"))
 
 
 class State(TypedDict):
@@ -35,12 +36,19 @@ class RAGCore:
 
     def _build_graph(self):
         prompt = ChatPromptTemplate.from_template(
-            "You are an assistant for question-answering tasks. Use the following context to answer.\n"
-            "Context: {context}\nQuestion: {question}\nAnswer:"
+            "You are an assistant for question-answering tasks. "
+            "Use ONLY the context below to answer. "
+            "If the context does not contain enough information to answer, say so clearly instead of guessing.\n\n"
+            "Context: {context}\n\n"
+            "Question: {question}\n\n"
+            "Answer:"
         )
 
         def retrieve(state: State):
-            docs = self.vector_store.similarity_search(state["question"], k=5)
+            results = self.vector_store.similarity_search_with_relevance_scores(
+                state["question"], k=TOP_K * 3
+            )
+            docs = [doc for doc, score in results if score >= 0.5][:TOP_K]
             return {"context": docs}
 
         def generate(state: State):
