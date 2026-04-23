@@ -8,6 +8,8 @@ from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_classic.retrievers import ContextualCompressionRetriever
+from langchain_community.document_compressors.flashrank_rerank import FlashrankRerank
 from langgraph.graph import START, StateGraph
 
 load_dotenv()
@@ -34,6 +36,11 @@ class RAGCore:
             embedding_function=self.embeddings,
             persist_directory=PERSIST_DIR,
         )
+        compressor = FlashrankRerank(top_n=TOP_K)
+        self.retriever = ContextualCompressionRetriever(
+            base_compressor=compressor,
+            base_retriever=self.vector_store.as_retriever(search_kwargs={"k": TOP_K * 3}),
+        )
         self.graph = self._build_graph()
 
     def _build_graph(self):
@@ -47,10 +54,7 @@ class RAGCore:
         )
 
         def retrieve(state: State):
-            results = self.vector_store.similarity_search_with_relevance_scores(
-                state["question"], k=TOP_K * 3
-            )
-            docs = [doc for doc, score in results if score >= 0.5][:TOP_K]
+            docs = self.retriever.invoke(state["question"])
             return {"context": docs}
 
         def generate(state: State):
