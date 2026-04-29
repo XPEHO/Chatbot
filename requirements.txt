@@ -11,4 +11,3 @@ docx2txt
 pymupdf
 fastapi
 uvicorn
-flashrank
