@@ -1,8 +1,7 @@
-name: test
+name: restart-chatbot
 
 on:
-  push:
-    branches: [ main, vault_connexion ]
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -14,13 +13,21 @@ jobs:
     steps:
       - name: Import Secrets
         id: import-secrets
-        uses: hashicorp/vault-action@v2
+        uses: hashicorp/vault-action@v3
         with:
           url: ${{ secrets.VAULT_URL }}
           method: jwt
-          role: ${{ secrets.ROLE }}
+          role: ${{ secrets.VAULT_ROLE }}
           jwtGithubAudience: ${{ secrets.JWT_GIT_AUDIENCE }}
-          secrets: |
-            ${{ secrets.VAULT_VPS_SSH_SERVER_IP }} | VPS_SERVER_IP
-            ${{ secrets.VAULT_VPS_SSH_SERVER_PASS }} | VPS_SSH_SERVER_PASS
-            ${{ secrets.VAULT_SSH_PRIVATE_KEY }} | SSH_PRIVATE_KEY
+          secrets: >-
+            ${{ secrets.VAULT_VPS_SSH_SERVER_IP }} | VPS_SERVER_IP ;
+            ${{ secrets.VAULT_VPS_SSH_SERVER_PASS }} | VPS_SSH_PASS ;
+            ${{ secrets.VAULT_SSH_PRIVATE_KEY }} | VPS_SSH_PRIVATE_KEY ;
+      - name: Connect VPS
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: sh update_chatbot.sh
+          host: ${{ steps.import-secrets.outputs.VPS_SERVER_IP }}
+          username: debian
+          passphrase: ${{ steps.import-secrets.outputs.VPS_SSH_PASS }}
+          privateKey: ${{ steps.import-secrets.outputs.VPS_SSH_PRIVATE_KEY }}
