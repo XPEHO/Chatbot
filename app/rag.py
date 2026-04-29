@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import List
 from typing_extensions import TypedDict
 
@@ -7,10 +8,11 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_classic.retrievers import ContextualCompressionRetriever
 from langchain_community.document_compressors.flashrank_rerank import FlashrankRerank
 from langgraph.graph import START, StateGraph
+
 
 load_dotenv()
 LLM_MODEL = os.getenv("MODEL_LLM")
@@ -36,26 +38,36 @@ class RAGCore:
             embedding_function=self.embeddings,
             persist_directory=PERSIST_DIR,
         )
-        compressor = FlashrankRerank(top_n=TOP_K)
+        self.base_retriever = self.vector_store.as_retriever(search_kwargs={"k": TOP_K * 3})
+        self.compressor = FlashrankRerank(top_n=TOP_K)
         self.retriever = ContextualCompressionRetriever(
-            base_compressor=compressor,
-            base_retriever=self.vector_store.as_retriever(search_kwargs={"k": TOP_K * 3}),
+            base_compressor=self.compressor,
+            base_retriever=self.base_retriever,
         )
         self.graph = self._build_graph()
 
     def _build_graph(self):
         prompt = ChatPromptTemplate.from_template(
-            "You are an assistant for question-answering tasks. "
-            "Use ONLY the context below to answer. "
-            "If the context does not contain enough information to answer, say so clearly instead of guessing.\n\n"
-            "Context: {context}\n\n"
+            "Tu es un assistant pour répondre à des questions "
+            "Utilise le contexte ci-dessous pour répondre à la question"
+            "Si le context fourni ne contient pas assez d'informations pour répondre, dis le clairement plutôt que d'inventer\n\n"
+            "Contexte: {context}\n\n"
             "Question: {question}\n\n"
-            "Answer:"
+            "Réponse:"
         )
 
         def retrieve(state: State):
-            docs = self.retriever.invoke(state["question"])
-            return {"context": docs}
+            question = state["question"]
+
+            raw_docs = self.base_retriever.invoke(question)
+            for i, doc in enumerate(raw_docs):
+                source = os.path.basename(doc.metadata.get("source", "?"))
+
+            reranked_docs = self.retriever.invoke(question)
+            for i, doc in enumerate(reranked_docs):
+                source = os.path.basename(doc.metadata.get("source", "?"))
+
+            return {"context": reranked_docs}
 
         def generate(state: State):
             docs_content = "\n\n".join(doc.page_content for doc in state["context"])
@@ -75,6 +87,7 @@ class RAGCore:
         workflow.add_edge(START, "retrieve")
         workflow.add_edge("retrieve", "generate")
         return workflow.compile()
+    
 
     def query(self, text: str, history: List[dict] = []) -> str:
         result = self.graph.invoke({"question": text, "history": history})
