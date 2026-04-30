@@ -51,7 +51,8 @@ def chat_completions(request: ChatCompletionRequest):
         raise HTTPException(status_code=400, detail="messages is required")
 
     user_msg = request.messages[-1].content
-    answer = engine.query(user_msg)
+    history = [{"role": m.role, "content": m.content} for m in request.messages[:-1]]
+    answer = engine.query(user_msg, history)
     created = int(time.time())
     completion_id = f"chatcmpl-{uuid.uuid4().hex[:24]}"
     model_id = request.model or BACKEND_MODEL_ID
