@@ -1,0 +1,33 @@
+name: reload-vector_store
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+
+jobs:
+  test-vault:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: jwt
+          role: ${{ secrets.VAULT_ROLE }}
+          jwtGithubAudience: ${{ secrets.JWT_GIT_AUDIENCE }}
+          secrets: >-
+            ${{ secrets.VAULT_VPS_SSH_SERVER_IP }} | VPS_SERVER_IP ;
+            ${{ secrets.VAULT_VPS_SSH_SERVER_PASS }} | VPS_SSH_PASS ;
+            ${{ secrets.VAULT_SSH_PRIVATE_KEY }} | VPS_SSH_PRIVATE_KEY ;
+      - name: Connect VPS and relaod vector store
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: sudo bash images/chatbot/reload_vector_store.sh
+          host: ${{ steps.import-secrets.outputs.VPS_SERVER_IP }}
+          username: debian
+          passphrase: ${{ steps.import-secrets.outputs.VPS_SSH_PASS }}
+          privateKey: ${{ steps.import-secrets.outputs.VPS_SSH_PRIVATE_KEY }}
